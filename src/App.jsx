@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './components/Dashboard';
 import Product from './components/Product';
+import Orders from './components/Orders';
+import OrderDetail from './components/OrderDetail';
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -35,6 +37,23 @@ const App = () => {
                             <Product />
                         </ProtectedRoute>
                     }/>    
+
+                    <Route
+  path="/orders"
+  element={
+    <ProtectedRoute>
+      <Orders />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/orders/:orderId"
+  element={
+    <ProtectedRoute>
+      <OrderDetail />
+    </ProtectedRoute>
+  }
+/>
 
                 <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
