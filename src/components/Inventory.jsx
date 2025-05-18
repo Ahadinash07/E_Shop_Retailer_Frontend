@@ -19,7 +19,7 @@ import {
   FiAlertCircle
 } from 'react-icons/fi';
 
-const API_URL = "https://e-shop-backend-sage.vercel.app";
+const API_URL = "https://ahadinash07-e-shop-backend2-for-admin-retailer.vercel.app";
 
 const Inventory = () => {
   // State management

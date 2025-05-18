@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FiX } from 'react-icons/fi';
 
-const API_URL = "https://e-shop-backend-sage.vercel.app";
+const API_URL = "https://ahadinash07-e-shop-backend2-for-admin-retailer.vercel.app";
 
 const EditProductModal = ({ isOpen, onClose, product, onProductUpdated }) => {
   const [formData, setFormData] = useState({

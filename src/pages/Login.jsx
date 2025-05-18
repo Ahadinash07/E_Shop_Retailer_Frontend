@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FiLock, FiMail } from 'react-icons/fi';
 import EcommerceAnimation from './EcommerceAnimation';
 
-const API_URL = 'https://e-shop-backend-sage.vercel.app/';
+const API_URL = 'https://ahadinash07-e-shop-backend2-for-admin-retailer.vercel.app/';
 
 const Login = () => {
     const formRef = useRef(null);

@@ -8,7 +8,7 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import OrderDetailsModal from '../Modal/OrderDetailsModal';
 
-const API_URL = 'https://e-shop-backend-sage.vercel.app';
+const API_URL = 'https://ahadinash07-e-shop-backend2-for-admin-retailer.vercel.app';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);

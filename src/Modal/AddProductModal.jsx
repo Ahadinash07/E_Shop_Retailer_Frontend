@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-const API_URL = 'https://e-shop-backend-sage.vercel.app';
+const API_URL = 'https://ahadinash07-e-shop-backend2-for-admin-retailer.vercel.app';
 
 const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
     const [retailerId, setRetailerId] = useState(null);
