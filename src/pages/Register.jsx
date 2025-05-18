@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiLock } from 'react-icons/fi';
 import EcommerceAnimation from './EcommerceAnimation';
 
-const API_URL = 'http://localhost:5374/';
+const API_URL = 'https://e-shop-backend-sage.vercel.app/';
 
 const Register = () => {
     const formRef = useRef(null);

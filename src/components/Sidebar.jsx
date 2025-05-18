@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Boxes } from "lucide-react";
+import { MdInventory } from "react-icons/md";
 
 const Sidebar = () => {
   const sidebarVariants = {
@@ -82,6 +84,7 @@ const Sidebar = () => {
             </motion.div>
           </motion.li>
 
+
           <motion.li variants={itemVariants}>
             <motion.div
               variants={linkVariants}
@@ -99,6 +102,27 @@ const Sidebar = () => {
               </Link>
             </motion.div>
           </motion.li>
+
+
+          <motion.li variants={itemVariants}>
+            <motion.div
+              variants={linkVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <Link 
+                to="/inventory" 
+                className="flex items-center p-3 rounded-lg transition-all"
+              >
+                <MdInventory className="h-5 w-5 mr-3"/>
+                {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg> */}
+                <span>Inventory</span>
+              </Link>
+            </motion.div>
+          </motion.li>
+          
 
           <motion.li variants={itemVariants}>
             <motion.div
@@ -135,6 +159,8 @@ const Sidebar = () => {
               </Link>
             </motion.div>
           </motion.li>
+
+          
         </motion.ul>
       </motion.div>
     </motion.div>

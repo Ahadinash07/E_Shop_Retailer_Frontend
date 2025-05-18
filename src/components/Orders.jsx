@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
-const API_URL = 'http://localhost:5374/';
+const API_URL = 'https://e-shop-backend-sage.vercel.app/';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
@@ -228,7 +228,7 @@ const Orders = () => {
                                                 {order.quantity}
                                             </td>
                                             <td className="px-4 py-4 text-sm text-gray-900 sm:px-6">
-                                                $
+                                               ₹
                                                 {isNaN(Number(order.total_amount))
                                                     ? 'N/A'
                                                     : Number(order.total_amount).toFixed(2)}

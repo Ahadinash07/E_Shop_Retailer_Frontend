@@ -5,7 +5,9 @@ import Register from './pages/Register';
 import Dashboard from './components/Dashboard';
 import Product from './components/Product';
 import Orders from './components/Orders';
-import OrderDetail from './components/OrderDetail';
+import CustomerPage from './components/CustomerPage';
+import OrdersPage from './components/OrdersPage';
+import Inventory from './components/Inventory';
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -36,7 +38,14 @@ const App = () => {
                         <ProtectedRoute>
                             <Product />
                         </ProtectedRoute>
-                    }/>    
+                    }/>  
+                    <Route
+                    path="/customers"
+                    element={
+                        <ProtectedRoute>
+                            <CustomerPage />
+                        </ProtectedRoute>
+                    }/>  
 
                     <Route
   path="/orders"
@@ -46,14 +55,22 @@ const App = () => {
     </ProtectedRoute>
   }
 />
-<Route
-  path="/orders/:orderId"
-  element={
-    <ProtectedRoute>
-      <OrderDetail />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/orders/:userId"
+          element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute>
+              <Inventory />
+            </ProtectedRoute>
+          }
+        />
 
                 <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
@@ -62,44 +79,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React from 'react';
-// import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-// import Login from './components/Login';
-// import Register from './components/Register';
-// import Dashboard from './components/Dashboard';
-// import AddProduct from './components/AddProduct';
-
-// function App() {
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/login" element={<Login />} />
-//         <Route path="/register" element={<Register />} />
-//         <Route path="/dashboard" element={<Dashboard />} />
-//         <Route path="/addproduct" element={<AddProduct />} />
-//         <Route path="/" element={<Navigate to="/login" />} />
-//       </Routes>
-//     </Router>
-//   );
-// }
-
-// export default App;
- 
-
-

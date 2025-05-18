@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-const API_URL = 'http://localhost:5374';
+const API_URL = 'https://e-shop-backend-sage.vercel.app';
 
 const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
     const [retailerId, setRetailerId] = useState(null);
@@ -18,7 +18,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get(`${API_URL}/getCategories`);
+                const response = await axios.get(`${API_URL}/api/getCategories`);
                 setCategories(response.data[0]);
             } catch (error) {
                 console.error("Error fetching categories:", error);
@@ -110,7 +110,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                     formData.append('video', values.video);
                 }
 
-                const response = await axios.post(`${API_URL}/addProduct`, formData, {
+                const response = await axios.post(`${API_URL}/api/products/addProduct`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`

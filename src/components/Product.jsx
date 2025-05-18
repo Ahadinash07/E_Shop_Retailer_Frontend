@@ -15,7 +15,7 @@ import {
   FiChevronRight 
 } from 'react-icons/fi';
 
-const API_URL = "http://localhost:5374";
+const API_URL = "https://e-shop-backend-sage.vercel.app";
 
 const Product = () => {
   // State management
@@ -45,7 +45,7 @@ const Product = () => {
       }
 
       const retailerId = JSON.parse(storedRetailer).retailerId;
-      const response = await axios.get(`${API_URL}/getRetailerProducts/${retailerId}`);
+      const response = await axios.get(`${API_URL}/api/products/getRetailerProducts/${retailerId}`);
       
       if (!response.data || !Array.isArray(response.data.products)) {
         throw new Error('Invalid response format');
@@ -384,7 +384,7 @@ const Product = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Fixed Navbar */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 p-6">
           <Navbar />
         </div>
 

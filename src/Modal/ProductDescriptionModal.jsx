@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const API_URL = "http://localhost:5374";
+const API_URL = 'https://e-shop-backend-sage.vercel.app';
 
 const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
   const [description, setDescription] = useState({
     colors: [],
     sizes: [],
-    weight: "",
-    dimensions: "",
+    weight: '',
+    dimensions: '',
     materials: [],
     features: [],
     images: [],
     videos: [],
   });
-  const [newColor, setNewColor] = useState("");
-  const [newSize, setNewSize] = useState("");
-  const [newMaterial, setNewMaterial] = useState("");
-  const [newFeature, setNewFeature] = useState("");
+  const [newColor, setNewColor] = useState('');
+  const [newSize, setNewSize] = useState('');
+  const [newMaterial, setNewMaterial] = useState('');
+  const [newFeature, setNewFeature] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [videoFiles, setVideoFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,15 +32,13 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
 
   const fetchDescription = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/productDescriptions/${productId}`
-      );
+      const response = await axios.get(`${API_URL}/productDescriptions/${productId}`);
       if (response.data.success) {
         setDescription({
           colors: response.data.data.colors || [],
           sizes: response.data.data.sizes || [],
-          weight: response.data.data.weight || "",
-          dimensions: response.data.data.dimensions || "",
+          weight: response.data.data.weight || '',
+          dimensions: response.data.data.dimensions || '',
           materials: response.data.data.materials || [],
           features: response.data.data.features || [],
           images: response.data.data.images || [],
@@ -48,8 +46,8 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
         });
       }
     } catch (error) {
-      console.error("Error fetching description:", error);
-      setError("Failed to load product description");
+      console.error('Error fetching description:', error);
+      setError('Failed to load product description');
     }
   };
 
@@ -60,122 +58,95 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
     setUploadProgress(0);
 
     try {
-      const totalFiles = imageFiles.length + videoFiles.length;
-      console.log("Total files to upload:", totalFiles, {
-        imageFiles: imageFiles.map((f) => f.name),
-        videoFiles: videoFiles.map((f) => f.name),
+      // Validate file counts
+      const totalImages = description.images.length + imageFiles.length;
+      const totalVideos = description.videos.length + videoFiles.length;
+      if (totalImages > 5) {
+        throw new Error(`Cannot add ${imageFiles.length} images. Only ${5 - description.images.length} more allowed.`);
+      }
+      if (totalVideos > 2) {
+        throw new Error(`Cannot add ${videoFiles.length} videos. Only ${2 - description.videos.length} more allowed.`);
+      }
+
+      // Validate file types and sizes
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const validVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+      const maxImageSize = 5 * 1024 * 1024; // 5MB
+      const maxVideoSize = 20 * 1024 * 1024; // 20MB
+
+      for (const file of imageFiles) {
+        if (!validImageTypes.includes(file.type)) {
+          throw new Error(`Invalid image type for ${file.name}. Allowed: JPEG, PNG, WEBP.`);
+        }
+        if (file.size > maxImageSize) {
+          throw new Error(`Image ${file.name} exceeds 5MB.`);
+        }
+      }
+
+      for (const file of videoFiles) {
+        if (!validVideoTypes.includes(file.type)) {
+          throw new Error(`Invalid video type for ${file.name}. Allowed: MP4, WEBM, MOV.`);
+        }
+        if (file.size > maxVideoSize) {
+          throw new Error(`Video ${file.name} exceeds 20MB.`);
+        }
+      }
+
+      // Prepare FormData
+      const formData = new FormData();
+      formData.append('productId', productId);
+      formData.append('colors', JSON.stringify(description.colors));
+      formData.append('sizes', JSON.stringify(description.sizes));
+      formData.append('weight', description.weight || '');
+      formData.append('dimensions', description.dimensions || '');
+      formData.append('materials', JSON.stringify(description.materials));
+      formData.append('features', JSON.stringify(description.features));
+      // Send only existing images/videos to preserve them
+      formData.append('images', JSON.stringify(description.images));
+      formData.append('videos', JSON.stringify(description.videos));
+
+      // Append new files
+      imageFiles.forEach((file) => {
+        formData.append('images', file);
       });
 
-      // Upload images
-      let uploadedImages = [];
-      if (imageFiles.length > 0) {
-        const imageFormData = new FormData();
-        imageFormData.append("productId", productId);
-        imageFormData.append("type", "image");
-        imageFiles.forEach((file) => {
-          imageFormData.append("files", file);
-        });
+      videoFiles.forEach((file) => {
+        formData.append('videos', file);
+      });
 
-        console.log("Uploading images:", imageFiles.map((f) => f.name));
-        const imageResponse = await axios.post(
-          `${API_URL}/uploadMedia`,
-          imageFormData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setUploadProgress(percentCompleted / 2); // Images are half the progress
-            },
-          }
-        );
-
-        if (imageResponse.data.success) {
-          uploadedImages = imageResponse.data.uploads.map((upload) => upload.url);
-          console.log("Uploaded images:", uploadedImages);
-        } else {
-          throw new Error(imageResponse.data.error || "Image upload failed");
-        }
-      }
-
-      // Upload videos
-      let uploadedVideos = [];
-      if (videoFiles.length > 0) {
-        const videoFormData = new FormData();
-        videoFormData.append("productId", productId);
-        videoFormData.append("type", "video");
-        videoFiles.forEach((file) => {
-          videoFormData.append("files", file);
-        });
-
-        console.log("Uploading videos:", videoFiles.map((f) => f.name));
-        const videoResponse = await axios.post(
-          `${API_URL}/uploadMedia`,
-          videoFormData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setUploadProgress(50 + percentCompleted / 2); // Videos are the other half
-            },
-          }
-        );
-
-        if (videoResponse.data.success) {
-          uploadedVideos = videoResponse.data.uploads.map((upload) => upload.url);
-          console.log("Uploaded videos:", uploadedVideos);
-        } else {
-          throw new Error(videoResponse.data.error || "Video upload failed");
-        }
-      }
-
-      // Prepare payload
-      const payload = {
+      console.log('Submitting FormData:', {
         productId,
-        colors: Array.isArray(description.colors) ? description.colors : [],
-        sizes: Array.isArray(description.sizes) ? description.sizes : [],
-        weight: description.weight || null,
-        dimensions: description.dimensions || "",
-        materials: Array.isArray(description.materials)
-          ? description.materials
-          : [],
-        features: Array.isArray(description.features) ? description.features : [],
-        images: [...description.images, ...uploadedImages],
-        videos: [...description.videos, ...uploadedVideos],
-      };
+        images: imageFiles.map((f) => f.name),
+        videos: videoFiles.map((f) => f.name),
+        existingImages: description.images,
+        existingVideos: description.videos,
+      });
 
-      // Enforce limits (5 images, 2 videos)
-      payload.images = payload.images.slice(0, 5);
-      payload.videos = payload.videos.slice(0, 2);
-
-      console.log("Sending payload to server:", payload);
-
-      const response = await axios.post(
-        `${API_URL}/productDescriptions`,
-        payload,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await axios.post(`${API_URL}/productDescriptions`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        },
+      });
 
       if (response.data.success) {
-        console.log("Description saved successfully:", response.data);
+        console.log('Description saved successfully:', response.data);
         setImageFiles([]);
         setVideoFiles([]);
+        // Update local state with new media from response
+        setDescription((prev) => ({
+          ...prev,
+          images: response.data.data.images || prev.images,
+          videos: response.data.data.videos || prev.videos,
+        }));
         onClose();
       } else {
-        throw new Error(response.data.message || "Failed to save description");
+        throw new Error(response.data.error || 'Failed to save description');
       }
     } catch (error) {
-      console.error("Error saving description:", error);
-      setError(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to save description"
-      );
+      console.error('Error saving description:', error);
+      setError(error.message || 'Failed to save description');
     } finally {
       setIsLoading(false);
       setUploadProgress(0);
@@ -184,12 +155,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    console.log("Selected image files:", files.map((f) => f.name));
+    console.log('Selected image files:', files.map((f) => f.name));
     const remainingSlots = 5 - description.images.length;
     if (files.length > remainingSlots) {
-      setError(
-        `Cannot add ${files.length} images. Only ${remainingSlots} more allowed.`
-      );
+      setError(`Cannot add ${files.length} images. Only ${remainingSlots} more allowed.`);
       setImageFiles(files.slice(0, remainingSlots));
     } else {
       setImageFiles(files);
@@ -198,12 +167,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
 
   const handleVideoChange = (e) => {
     const files = Array.from(e.target.files);
-    console.log("Selected video files:", files.map((f) => f.name));
+    console.log('Selected video files:', files.map((f) => f.name));
     const remainingSlots = 2 - description.videos.length;
     if (files.length > remainingSlots) {
-      setError(
-        `Cannot add ${files.length} videos. Only ${remainingSlots} more allowed.`
-      );
+      setError(`Cannot add ${files.length} videos. Only ${remainingSlots} more allowed.`);
       setVideoFiles(files.slice(0, remainingSlots));
     } else {
       setVideoFiles(files);
@@ -216,7 +183,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
         ...prev,
         [field]: [...prev[field], value.trim()],
       }));
-      setValue("");
+      setValue('');
     }
   };
 
@@ -238,24 +205,21 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
-            Product Description for ID: {productId}
-          </h2>
+          <h2 className="text-xl font-bold">Product Description for ID: {productId}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
             disabled={isLoading}
+            aria-label="Close modal"
           >
             ×
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -275,9 +239,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Colors
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Colors</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -286,12 +248,14 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   placeholder="Add color"
                   disabled={isLoading}
+                  aria-label="Add new color"
                 />
                 <button
                   type="button"
-                  onClick={() => handleAddToArray("colors", newColor, setNewColor)}
+                  onClick={() => handleAddToArray('colors', newColor, setNewColor)}
                   className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
                   disabled={isLoading || !newColor.trim()}
+                  aria-label="Add color"
                 >
                   Add
                 </button>
@@ -305,9 +269,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                     {color}
                     <button
                       type="button"
-                      onClick={() => handleRemoveFromArray("colors", index)}
+                      onClick={() => handleRemoveFromArray('colors', index)}
                       className="ml-2 text-red-500 hover:text-red-700"
                       disabled={isLoading}
+                      aria-label={`Remove color ${color}`}
                     >
                       ×
                     </button>
@@ -317,9 +282,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sizes
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sizes</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -328,12 +291,14 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   placeholder="Add size"
                   disabled={isLoading}
+                  aria-label="Add new size"
                 />
                 <button
                   type="button"
-                  onClick={() => handleAddToArray("sizes", newSize, setNewSize)}
+                  onClick={() => handleAddToArray('sizes', newSize, setNewSize)}
                   className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
                   disabled={isLoading || !newSize.trim()}
+                  aria-label="Add size"
                 >
                   Add
                 </button>
@@ -347,9 +312,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                     {size}
                     <button
                       type="button"
-                      onClick={() => handleRemoveFromArray("sizes", index)}
+                      onClick={() => handleRemoveFromArray('sizes', index)}
                       className="ml-2 text-red-500 hover:text-red-700"
                       disabled={isLoading}
+                      aria-label={`Remove size ${size}`}
                     >
                       ×
                     </button>
@@ -365,12 +331,14 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 value={description.weight}
                 onChange={(e) =>
                   setDescription({ ...description, weight: e.target.value })
                 }
                 className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
+                aria-label="Product weight in kilograms"
               />
             </div>
 
@@ -387,6 +355,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                 className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 10×5×2"
                 disabled={isLoading}
+                aria-label="Product dimensions"
               />
             </div>
 
@@ -402,14 +371,14 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   placeholder="Add material"
                   disabled={isLoading}
+                  aria-label="Add new material"
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    handleAddToArray("materials", newMaterial, setNewMaterial)
-                  }
+                  onClick={() => handleAddToArray('materials', newMaterial, setNewMaterial)}
                   className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
                   disabled={isLoading || !newMaterial.trim()}
+                  aria-label="Add material"
                 >
                   Add
                 </button>
@@ -423,9 +392,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                     {material}
                     <button
                       type="button"
-                      onClick={() => handleRemoveFromArray("materials", index)}
+                      onClick={() => handleRemoveFromArray('materials', index)}
                       className="ml-2 text-red-500 hover:text-red-700"
                       disabled={isLoading}
+                      aria-label={`Remove material ${material}`}
                     >
                       ×
                     </button>
@@ -446,14 +416,14 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   placeholder="Add feature"
                   disabled={isLoading}
+                  aria-label="Add new feature"
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    handleAddToArray("features", newFeature, setNewFeature)
-                  }
+                  onClick={() => handleAddToArray('features', newFeature, setNewFeature)}
                   className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
                   disabled={isLoading || !newFeature.trim()}
+                  aria-label="Add feature"
                 >
                   Add
                 </button>
@@ -467,9 +437,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                     {feature}
                     <button
                       type="button"
-                      onClick={() => handleRemoveFromArray("features", index)}
+                      onClick={() => handleRemoveFromArray('features', index)}
                       className="ml-2 text-red-500 hover:text-red-700"
                       disabled={isLoading}
+                      aria-label={`Remove feature ${feature}`}
                     >
                       ×
                     </button>
@@ -485,24 +456,39 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
                 className="w-full p-2 border rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 disabled={isLoading || description.images.length >= 5}
+                aria-label="Upload product images"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Upload up to 5 images (JPEG, PNG, WEBP). Max 5MB per image. Hold Ctrl (Windows) or Cmd (Mac) to select multiple files.
+              </p>
+              {imageFiles.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-700">Selected Images:</p>
+                  <ul className="list-disc pl-5 text-sm text-gray-600">
+                    {imageFiles.map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {description.images.map((image, index) => (
                   <div key={index} className="relative group">
                     <img
                       src={image}
-                      alt={`Product ${index}`}
+                      alt={`Product image ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
                     <button
                       type="button"
-                      onClick={() => handleRemoveMedia("images", index)}
+                      onClick={() => handleRemoveMedia('images', index)}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       disabled={isLoading}
+                      aria-label={`Remove image ${index + 1}`}
                     >
                       ×
                     </button>
@@ -518,11 +504,25 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
               <input
                 type="file"
                 multiple
-                accept="video/*"
+                accept="video/mp4,video/webm,video/quicktime"
                 onChange={handleVideoChange}
                 className="w-full p-2 border rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 disabled={isLoading || description.videos.length >= 2}
+                aria-label="Upload product videos"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Upload up to 2 videos (MP4, WEBM, MOV). Max 20MB per video. Hold Ctrl (Windows) or Cmd (Mac) to select multiple files.
+              </p>
+              {videoFiles.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-700">Selected Videos:</p>
+                  <ul className="list-disc pl-5 text-sm text-gray-600">
+                    {videoFiles.map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="mt-4 grid grid-cols-1 gap-4">
                 {description.videos.map((video, index) => (
                   <div key={index} className="relative group">
@@ -532,9 +532,10 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                     </video>
                     <button
                       type="button"
-                      onClick={() => handleRemoveMedia("videos", index)}
+                      onClick={() => handleRemoveMedia('videos', index)}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       disabled={isLoading}
+                      aria-label={`Remove video ${index + 1}`}
                     >
                       ×
                     </button>
@@ -550,6 +551,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               disabled={isLoading}
+              aria-label="Cancel"
             >
               Cancel
             </button>
@@ -557,6 +559,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
               type="submit"
               disabled={isLoading}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 flex items-center justify-center"
+              aria-label="Save description"
             >
               {isLoading ? (
                 <>
@@ -583,7 +586,7 @@ const ProductDescriptionModal = ({ isOpen, onClose, productId }) => {
                   Saving...
                 </>
               ) : (
-                "Save Description"
+                'Save Description'
               )}
             </button>
           </div>
